@@ -1,0 +1,1636 @@
+:root {
+  --bg: #0b0b0d;
+  --karte: #15151a;
+  --karte-hoch: #1c1c22;
+  --linie: #292930;
+  --linie-hell: #3c3c45;
+  --text: #f2f0ed;
+  --gedimmt: #8e8e98;
+  --stumm: #6a6a74;
+  --gold: #c9a227;
+  --gold-hell: #e8c449;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 76px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.62 "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+code {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.92em;
+  color: var(--gedimmt);
+}
+
+.wrap {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 0 24px 64px;
+}
+
+a {
+  color: inherit;
+}
+
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+
+.skip:focus {
+  left: 24px;
+  top: 24px;
+  z-index: 10;
+  background: var(--karte-hoch);
+  border: 1px solid var(--gold);
+  padding: 10px 14px;
+}
+
+/* ---------- Hero ---------- */
+
+header.hero {
+  padding: 20px 0 12px;
+  border-bottom: 1px solid var(--linie);
+  margin-bottom: 6px;
+}
+
+.kicker {
+  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 10px;
+}
+
+h1 {
+  font-size: clamp(32px, 5vw, 50px);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+  font-weight: 700;
+  margin: 0 0 10px;
+  max-width: 16ch;
+}
+
+h1 em {
+  font-style: normal;
+  color: var(--gold);
+}
+
+.lede {
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--gedimmt);
+  max-width: 62ch;
+  margin: 0;
+}
+
+.daten {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 1px;
+  background: var(--linie);
+  border: 1px solid var(--linie);
+  margin-top: 44px;
+}
+
+.daten div {
+  background: var(--bg);
+  padding: 15px 17px;
+}
+
+.daten dt {
+  font: 500 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  margin-bottom: 8px;
+}
+
+.daten dd {
+  margin: 0;
+  font-size: 14.5px;
+  font-weight: 500;
+}
+
+/* ---------- Überschriften ---------- */
+
+h2 {
+  font: 500 12px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.17em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  margin: 68px 0 26px;
+  padding-bottom: 13px;
+  border-bottom: 1px solid var(--linie);
+}
+
+h2:first-of-type {
+  margin-top: 22px;
+}
+
+h2 span {
+  color: var(--gold);
+}
+
+/* ---------- Wizard ---------- */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fortschritt-leiste {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(11, 11, 13, 0.94);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--linie);
+}
+
+.fortschritt-inhalt {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 10px 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.fortschritt-knoepfe {
+  display: flex;
+  gap: 4px;
+}
+
+.schritt-knopf {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--stumm);
+  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s, background 0.16s;
+}
+
+.schritt-knopf:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.schritt-knopf:not(:disabled):hover {
+  color: var(--text);
+  background: var(--karte);
+}
+
+.schritt-knopf.aktiv {
+  color: var(--gold);
+  border-color: var(--gold);
+  background: var(--karte);
+}
+
+.schritt-knopf.fertig {
+  color: var(--gedimmt);
+}
+
+.schritt-knopf.fertig .schritt-nr {
+  color: var(--gold);
+}
+
+.schritt-nr {
+  color: var(--stumm);
+}
+
+.fortschritt-label {
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
+.progress-track {
+  flex: 1;
+  min-width: 60px;
+  height: 4px;
+  background: var(--linie);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.3s ease;
+}
+
+.mini-kopf {
+  padding: 34px 0 4px;
+}
+
+.karten {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.karten-breit {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.wahl {
+  display: block;
+}
+
+.wahl-flaeche {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  height: 100%;
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  padding: 12px;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+
+.wahl:hover .wahl-flaeche {
+  background: var(--karte-hoch);
+  border-color: var(--linie-hell);
+}
+
+.wahl input:focus-visible + .wahl-flaeche {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.wahl input:checked + .wahl-flaeche {
+  border-color: var(--gold);
+  background: var(--karte-hoch);
+  box-shadow: inset 0 -2px 0 var(--gold);
+}
+
+.wahl input:checked + .wahl-flaeche .wahl-titel {
+  color: var(--gold-hell);
+}
+
+.haken {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--gold);
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 0.18s, transform 0.18s;
+}
+
+.wahl input:checked + .wahl-flaeche .haken {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.haken svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: #0b0b0d;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.wahl input:disabled + .wahl-flaeche {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wahl-bilder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wahl-bild {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0b0b0d;
+}
+
+.wahl-bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumb {
+  display: block;
+  aspect-ratio: 1 / 1;
+  background: #f4f3f1;
+  border: 1px solid var(--linie);
+  overflow: hidden;
+}
+
+.thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wahl-titel {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--text);
+  transition: color 0.18s;
+}
+
+.wahl-meta {
+  font-size: 13.5px;
+  color: var(--gedimmt);
+  line-height: 1.5;
+}
+
+.wahl-preis {
+  font: 500 11px/1.4 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+}
+
+.stil-kopf {
+  display: flex;
+  align-items: baseline;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 26px 0 18px;
+}
+
+.stil-kopf h3 {
+  margin: 0;
+  font-size: 21px;
+  letter-spacing: -0.02em;
+}
+
+.stil-kopf p {
+  margin: 0;
+  color: var(--gedimmt);
+  font-size: 15px;
+}
+
+.stil-anmerkung {
+  flex: 1 1 100%;
+  font-size: 14px;
+  color: var(--stumm);
+}
+
+.zwischen-titel {
+  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--stumm);
+  margin: 38px 0 14px;
+}
+
+.vorschau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 22px;
+  margin: 22px 0 0;
+  padding: 16px 18px;
+  background: var(--karte);
+  border: 1px solid var(--linie);
+}
+
+.vorschau-bilder {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vorschau-bild {
+  display: block;
+  width: 54px;
+  height: 54px;
+  background: #f4f3f1;
+  border: 1px solid var(--linie);
+  overflow: hidden;
+}
+
+.vorschau-bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vorschau-text {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--gedimmt);
+  font-variant-numeric: tabular-nums;
+}
+
+.vorschau-text strong {
+  color: var(--gold-hell);
+}
+
+.stil-zeile {
+  font-size: 14.5px;
+  color: var(--gedimmt);
+  margin: 0 0 18px;
+}
+
+.stil-zeile strong {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.stil-zeile em {
+  font-style: normal;
+  color: var(--stumm);
+  display: block;
+}
+
+.varianten-info {
+  margin: 20px 0 0;
+  color: var(--gedimmt);
+  font-size: 15px;
+  max-width: 76ch;
+}
+
+.varianten-info strong {
+  color: var(--text);
+}
+
+.look-link {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin: 14px 0 0;
+  padding: 12px 16px;
+  border: 1px solid var(--linie);
+  border-radius: 4px;
+  max-width: 76ch;
+}
+
+.look-link span {
+  color: var(--gedimmt);
+  font-size: 14px;
+}
+
+.absatz {
+  color: var(--gedimmt);
+  font-size: 15px;
+  max-width: 76ch;
+  margin: 0 0 24px;
+}
+
+/* ---------- Karten ---------- */
+
+.raster {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 400px));
+  justify-content: start;
+  gap: 22px;
+}
+
+.karte {
+  background: var(--karte);
+  border: 1px solid var(--linie);
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.18s, transform 0.18s;
+}
+
+.karte:hover {
+  border-color: var(--linie-hell);
+  transform: translateY(-2px);
+}
+
+.karte[data-lage="anker"] {
+  border-color: var(--linie-hell);
+}
+
+.bilder {
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #f4f3f1;
+}
+
+.bilder img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.kopf {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 0;
+}
+
+.badge {
+  font: 500 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  padding: 6px 9px;
+  border: 1px solid var(--linie);
+  color: var(--gedimmt);
+}
+
+.badge.anker {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+.badge.accessoire {
+  border-color: #3a3a44;
+  color: #a8a6a2;
+}
+
+.preis {
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+
+.karte h3 {
+  font-size: 17.5px;
+  line-height: 1.28;
+  margin: 14px 18px 5px;
+  letter-spacing: -0.012em;
+}
+
+.shop {
+  margin: 0 18px 15px;
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+}
+
+.fakten {
+  list-style: none;
+  margin: 0 18px 15px;
+  padding: 0;
+}
+
+.fakten li {
+  font-size: 13.5px;
+  color: #c9c7c3;
+  padding: 4px 0 4px 16px;
+  position: relative;
+}
+
+.fakten li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12px;
+  width: 6px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.notiz {
+  font-size: 14px;
+  color: var(--gedimmt);
+  margin: 0 18px 18px;
+  padding-top: 15px;
+  border-top: 1px solid var(--linie);
+  flex: 1;
+}
+
+.link {
+  margin: 0 18px 18px;
+  font: 500 11.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold);
+  padding-bottom: 4px;
+  align-self: flex-start;
+}
+
+.link:hover,
+.link:focus-visible {
+  color: var(--gold);
+}
+
+/* ---------- Schritte ---------- */
+
+.schritte {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.schritte li {
+  display: grid;
+  grid-template-columns: 54px 1fr;
+  gap: 20px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--linie);
+  align-items: start;
+}
+
+.schritte .nr {
+  font: 700 26px/1 ui-monospace, Menlo, monospace;
+  color: var(--gold);
+  font-variant-numeric: tabular-nums;
+  padding-top: 2px;
+}
+
+.schritt-titel {
+  margin: 0 0 6px;
+  font-weight: 600;
+  font-size: 16.5px;
+  letter-spacing: -0.01em;
+}
+
+.schritt-meta {
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  margin-left: 10px;
+  white-space: nowrap;
+}
+
+.schritt-text {
+  margin: 0;
+  color: var(--gedimmt);
+  font-size: 14.5px;
+  max-width: 68ch;
+}
+
+/* ---------- Listen ---------- */
+
+.liste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.liste li {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.05fr) 118px 2.1fr;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--linie);
+  align-items: baseline;
+}
+
+.liste .was {
+  font-weight: 600;
+}
+
+.liste .wo {
+  font: 500 10.5px/1.45 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.liste .warum {
+  color: var(--gedimmt);
+  font-size: 14px;
+}
+
+/* ---------- Budget ---------- */
+
+.budget {
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  padding: 24px;
+}
+
+.budget-kopf {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.budget-label {
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+}
+
+.budget-zahl {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.budget-zahl em {
+  font-style: normal;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--gedimmt);
+  letter-spacing: 0;
+}
+
+.bar {
+  height: 5px;
+  background: #26262d;
+  margin: 20px 0 14px;
+}
+
+.bar .fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.25s ease;
+}
+
+.budget-rest {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--gedimmt);
+}
+
+.budget-rest strong {
+  color: var(--text);
+}
+
+.rechnung {
+  margin-top: 20px;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+}
+
+.rechnung .zeile {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--linie);
+  font-size: 15px;
+}
+
+.rechnung .zeile:last-child {
+  border-bottom: 0;
+}
+
+.rechnung .zeile span:last-child {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rechnung .summe {
+  background: var(--karte-hoch);
+  font-weight: 700;
+  font-size: 16.5px;
+  border-top: 1px solid var(--linie-hell);
+}
+
+.rechnung .summe span:last-child {
+  color: var(--gold-hell);
+}
+
+.rechnung .stumm {
+  color: var(--stumm);
+  font-size: 13.5px;
+}
+
+.rechnung .stumm span:last-child {
+  font-weight: 400;
+}
+
+/* ---------- Schuhe ---------- */
+
+.schuhe {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 30px;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  padding: 24px;
+  align-items: start;
+}
+
+.schuhe h3 {
+  margin: 0 0 16px;
+  font-size: 19px;
+  letter-spacing: -0.015em;
+}
+
+.merkmale {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.merkmale li {
+  font-size: 14.5px;
+  color: #c9c7c3;
+  padding: 5px 0 5px 17px;
+  position: relative;
+}
+
+.merkmale li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 13px;
+  width: 7px;
+  height: 1px;
+  background: var(--gold);
+}
+
+.schuhe-kasten p {
+  margin: 18px 0 18px;
+  font-size: 14.5px;
+  color: var(--gedimmt);
+}
+
+.schuhe-bild {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  background: var(--karte-hoch);
+  border: 1px solid var(--linie);
+}
+
+/* ---------- Einkauf ---------- */
+
+.einkauf {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 26px;
+  align-items: start;
+}
+
+.einkauf-spalte h3 {
+  margin: 0 0 14px;
+  font-size: 17px;
+  letter-spacing: -0.015em;
+}
+
+.einkaufsliste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.einkaufsliste li {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--linie);
+  font-size: 14.5px;
+}
+
+.einkaufsliste li a {
+  flex: 1;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.einkaufsliste li a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.einkaufsliste .summe {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.stile-hinweis {
+  font: 500 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stumm);
+  white-space: nowrap;
+}
+
+.einkaufsliste .summe-zeile {
+  border-bottom: 0;
+  border-top: 1px solid var(--linie-hell);
+  padding-top: 13px;
+  font-size: 16px;
+}
+
+.einkaufsliste .summe-zeile .summe {
+  color: var(--gold-hell);
+}
+
+/* ---------- Checklisten ---------- */
+
+.checkliste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.checkliste li {
+  border-bottom: 1px solid var(--linie);
+}
+
+.checkliste label {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 2px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.checkliste input {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border: 1px solid var(--linie-hell);
+  background: var(--karte);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.checkliste input:checked {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.checkliste .erledigt {
+  color: var(--stumm);
+  text-decoration: line-through;
+  text-decoration-color: var(--gold);
+}
+
+/* ---------- Shops ---------- */
+
+.shops {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.shop-karte {
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  padding: 20px 22px;
+}
+
+.shop-karte h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  letter-spacing: -0.015em;
+}
+
+.shop-addr {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.shop-note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--linie);
+  font-size: 14px;
+  color: var(--gedimmt);
+}
+
+/* ---------- Hinweise ---------- */
+
+.hinweis {
+  border-left: 2px solid var(--gold);
+  padding: 4px 0 4px 20px;
+  margin: 26px 0 0;
+  color: var(--gedimmt);
+  font-size: 14.5px;
+  max-width: 82ch;
+}
+
+.hinweis strong {
+  color: var(--text);
+}
+
+.warnung {
+  border: 1px solid var(--linie-hell);
+  background: var(--karte);
+  padding: 22px 24px;
+  margin: 0;
+}
+
+.warnung p {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  color: var(--gedimmt);
+  max-width: 82ch;
+}
+
+.warnung p:last-child {
+  margin-bottom: 0;
+}
+
+.warnung strong {
+  color: var(--text);
+}
+
+.warnung .marke {
+  color: var(--gold-hell);
+  font-weight: 600;
+}
+
+/* ---------- Fixierte Fussleiste ---------- */
+
+.fussleiste {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  background: var(--karte);
+  border-top: 1px solid var(--gold);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
+  padding: 13px 24px;
+}
+
+.fuss-inhalt {
+  max-width: 1140px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px 24px;
+  flex-wrap: wrap;
+}
+
+.fuss-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.fuss-label {
+  font: 500 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+}
+
+.fuss-wert {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fuss-summe {
+  color: var(--gold-hell);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.btn-gold {
+  background: var(--gold);
+  color: #0b0b0d;
+  border: 0;
+  padding: 14px 24px;
+  font: 600 14.5px/1.2 Inter, system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.16s;
+}
+
+.btn-gold:hover:not(:disabled) {
+  background: var(--gold-hell);
+}
+
+.btn-gold:disabled {
+  background: var(--linie);
+  color: var(--stumm);
+  cursor: not-allowed;
+}
+
+.fuss-knoepfe {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--linie-hell);
+  color: var(--gedimmt);
+  padding: 13px 20px;
+  font: 500 14.5px/1.2 Inter, system-ui, sans-serif;
+  cursor: pointer;
+  transition: color 0.16s, border-color 0.16s;
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--gold);
+}
+
+/* ---------- Footer ---------- */
+
+footer {
+  margin-top: 84px;
+  padding-top: 30px;
+  border-top: 1px solid var(--linie);
+  font-size: 13px;
+  color: var(--stumm);
+  line-height: 1.75;
+}
+
+footer strong {
+  color: var(--gedimmt);
+}
+
+footer p {
+  margin: 0 0 12px;
+  max-width: 92ch;
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- Mobil ---------- */
+
+@media (max-width: 660px) {
+  .schuhe {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .liste li {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .schritte li {
+    grid-template-columns: 40px 1fr;
+    gap: 14px;
+  }
+
+  .schritte .nr {
+    font-size: 21px;
+  }
+
+  header.hero {
+    padding-top: 52px;
+  }
+
+  .budget-zahl {
+    font-size: 28px;
+  }
+
+  .karten {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .fussleiste {
+    padding: 12px 16px;
+  }
+
+  .fuss-inhalt {
+    gap: 10px;
+  }
+
+  .fortschritt-inhalt {
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding: 8px 16px;
+  }
+
+  .fortschritt-knoepfe {
+    order: 2;
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .progress-track {
+    order: 1;
+  }
+
+  .fortschritt-label {
+    order: 1;
+  }
+
+  .fuss-knoepfe {
+    width: 100%;
+  }
+
+  .btn-gold {
+    flex: 1;
+  }
+
+  .einkaufsliste li {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+
+  .einkaufsliste li a {
+    flex: 1 1 100%;
+  }
+
+  .stil-kopf {
+    gap: 10px;
+  }
+}
+
+/* Schritt 3 — Zusatz */
+.zusatz {
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.zusatz-hint {
+  margin: 0 0 22px;
+  color: var(--gedimmt);
+}
+
+.zusatz-gruppe + .zusatz-gruppe {
+  margin-top: 26px;
+}
+
+.zusatz-gruppe h3 {
+  font-size: 1.35em;
+  margin: 0 0 8px;
+}
+
+.karten-klein {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.wahl:has(input:disabled) .wahl-flaeche {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wahl:has(input:disabled):hover .wahl-flaeche {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Schritt 4 — Abstimmung */
+.vergleich {
+  list-style: none;
+  margin: 0 0 26px;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.vergleich-zeile {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--linie);
+  border-radius: 12px;
+  background: var(--karte);
+}
+
+.vergleich-zeile.drueber {
+  opacity: 0.45;
+}
+
+.vergleich-zeile.gewaehlt {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.vergleich-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.vergleich-modus,
+.vergleich-preis {
+  color: var(--gedimmt);
+  font-size: 0.9em;
+}
+
+.drueber .vergleich-preis {
+  color: #e07a6a;
+}
+
+.vergleich-bilder {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.vergleich-bild {
+  display: block;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0b0b0d;
+}
+
+.vergleich-bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vergleich-zeile.favorit {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.vergleich-titel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.favorit-badge {
+  display: inline-block;
+  font-size: 0.78em;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--gold-hell);
+  border: 1px solid var(--gold);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.look-karten {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.look-karte-flaeche {
+  gap: 8px;
+}
+
+.look-karte:hover .look-karte-flaeche {
+  background: var(--karte-hoch);
+  border-color: var(--linie-hell);
+}
+
+.look-bilder {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.look-bild {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--linie);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0b0b0d;
+}
+
+.look-bild img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.look-modus {
+  color: var(--gedimmt);
+  font-size: 0.88em;
+}
+
+.look-zeile {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 2px;
+  font-size: 0.95em;
+}
+
+.look-preis {
+  font-weight: 600;
+}
+
+.look-anzahl {
+  color: var(--gedimmt);
+  font-size: 0.9em;
+}
+
+.look-drueber {
+  color: #e07a6a;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* Rangliste */
+.rangliste {
+  margin-top: 28px;
+}
+
+.rangliste h3 {
+  font-size: 1.35em;
+  margin: 0 0 12px;
+}
+
+.rangfolge {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.rangfolge li {
+  display: grid;
+  grid-template-columns: 34px auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: var(--karte);
+  border: 1px solid var(--linie);
+}
+
+.rangfolge li.mein {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+
+.rang-platz {
+  font-weight: 700;
+  color: var(--gedimmt);
+}
+
+.rang-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rang-balken {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--gold);
+  min-width: 4px;
+}
+
+.rang-zahl {
+  color: var(--gedimmt);
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* Live-Preis / Sale */
+.badge.sale {
+  border-color: var(--gold);
+  color: var(--gold-hell);
+}
+
+.preis s {
+  color: var(--stumm);
+  font-size: 0.82em;
+  font-weight: 500;
+  margin-right: 6px;
+}
+
+/* Einreichung */
+.einreichen {
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  padding: 24px;
+}
+
+.einreichen label {
+  display: block;
+  font-size: 13.5px;
+  color: var(--gedimmt);
+  margin-bottom: 6px;
+}
+
+.einreichen input[type="text"] {
+  display: block;
+  width: 100%;
+  max-width: 380px;
+  background: var(--bg);
+  border: 1px solid var(--linie);
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.einreichen input[type="text"]:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.einreichen .btn-gold {
+  margin-top: 16px;
+}
+
+.einreichen .hinweis {
+  margin-top: 16px;
+}
+
+.einreichungen {
+  margin-top: 34px;
+}
+
+.einreichungen h3 {
+  font-size: 1.35em;
+  margin: 0 0 12px;
+}
+
+@media (max-width: 640px) {
+  .vergleich-zeile {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .vergleich-zeile .btn-gold {
+    width: 100%;
+  }
+
+  .look-karten {
+    grid-template-columns: 1fr;
+  }
+
+  .rangfolge li {
+    grid-template-columns: 30px 1fr auto;
+  }
+
+  .rang-balken {
+    grid-column: 2 / -1;
+    grid-row: 2;
+  }
+}
