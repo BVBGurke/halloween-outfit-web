@@ -1,5 +1,6 @@
 import { PRODUKTE, preisVon, type Produkt } from '../data/outfit'
 import { eur } from '../lib/format'
+import { bildUrl } from '../lib/image'
 import type { KategorieGruppe } from './Builder'
 
 function Haken() {
@@ -63,11 +64,12 @@ export function TeileTauschen({ basis, tausch, gruppen, onChange }: Props) {
                       <Haken />
                       <span className="thumb">
                         <img
-                          src={`/teile/${option.bild}`}
+                          src={bildUrl(option.bild)}
                           alt=""
                           width={400}
                           height={400}
-                          loading="lazy"
+                          loading="eager"
+                          decoding="sync"
                         />
                       </span>
                       <strong className="wahl-titel">{option.titel}</strong>
@@ -86,3 +88,4 @@ export function TeileTauschen({ basis, tausch, gruppen, onChange }: Props) {
     </div>
   )
 }
+

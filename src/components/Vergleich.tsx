@@ -9,6 +9,7 @@ import {
   type Variante,
 } from '../data/outfit'
 import { eur } from '../lib/format'
+import { bildUrl } from '../lib/image'
 
 type Auswahl = { variante: Variante }
 
@@ -50,7 +51,7 @@ export function Vergleich({ stil, auswahl, onWahl }: Props) {
                 <span className="look-bilder">
                   {zeile.teile.map((teil) => (
                     <span className="look-bild" key={teil.id}>
-                      <img src={`/teile/${teil.bild}`} width={96} height={96} alt="" loading="lazy" />
+                      <img src={bildUrl(teil.bild)} width={96} height={96} alt="" loading="eager" decoding="sync" />
                     </span>
                   ))}
                 </span>

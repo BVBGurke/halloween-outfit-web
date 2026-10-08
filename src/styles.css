@@ -1634,3 +1634,327 @@ footer p {
     grid-row: 2;
   }
 }
+
+.schrank {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  border: 1px solid var(--linie);
+  background: var(--karte);
+  padding: 24px;
+  align-items: start;
+}
+
+.schrank-half h2 {
+  margin: 0 0 18px;
+  font-size: 1.35em;
+}
+
+.schrank-half:first-child {
+  border-right: 1px solid var(--linie);
+  padding-right: 30px;
+}
+
+.schrank-half:last-child {
+  padding-left: 30px;
+}
+
+.schrank-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.schrank-form > label {
+  display: block;
+  font-size: 13.5px;
+  color: var(--gedimmt);
+  margin-bottom: 6px;
+}
+
+.schrank-input,
+.schrank-select {
+  display: block;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--linie);
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.schrank-select {
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text) 50%),
+    linear-gradient(135deg, var(--text) 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+.schrank-input:focus-visible,
+.schrank-select:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.schrank-zeile {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.schrank-zeile legend {
+  font-size: 0;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.schrank-label {
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  padding-top: 11px;
+}
+
+.schrank-liste {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border-top: 1px solid var(--linie);
+}
+
+.schrank-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 1fr;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--linie);
+  align-items: start;
+  position: relative;
+}
+
+.schrank-loeschen {
+  position: absolute;
+  top: 11px;
+  right: 0;
+  background: transparent;
+  border: 0;
+  color: var(--stumm);
+  font: 600 18px/1 ui-monospace, monospace;
+  cursor: pointer;
+  padding: 2px 8px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.schrank-loeschen:hover:not(:disabled) {
+  color: #e07a6a;
+}
+
+.schrank-loeschen:disabled {
+  color: var(--stumm);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.schrank-id {
+  font: 500 10.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  padding-top: 2px;
+}
+
+.schrank-titel {
+  font-weight: 600;
+  font-size: 15px;
+  padding-top: 1px;
+}
+
+.schrank-meta {
+  font-size: 13.5px;
+  color: var(--gedimmt);
+  line-height: 1.45;
+  padding-top: 3px;
+}
+
+.schrank-notiz {
+  font-size: 13.5px;
+  color: var(--gedimmt);
+  padding-top: 3px;
+  max-width: 22ch;
+}
+
+.schrank-status {
+  font: 500 10.5px/1.4 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--stumm);
+  padding-top: 3px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.schrank-uebersicht {
+  margin-top: 30px;
+  border-top: 1px solid var(--linie);
+  padding-top: 22px;
+}
+
+.schrank-uebersicht h3 {
+  font-size: 1.25em;
+  margin: 0 0 16px;
+}
+
+.schrank-kategorie + .schrank-kategorie {
+  margin-top: 22px;
+}
+
+.schrank-kategorie h2 {
+  font: 500 11px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gedimmt);
+  margin: 0 0 12px;
+}
+
+.schrank-liste li:last-child {
+  border-bottom: 0;
+}
+
+.schrank-liste-alle {
+  margin-top: 26px;
+  border-top: 1px solid var(--linie);
+  padding-top: 18px;
+}
+
+@media (max-width: 760px) {
+  .schrank {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .schrank-half:first-child {
+    border-right: 0;
+    padding-right: 0;
+    padding-bottom: 22px;
+    border-bottom: 1px solid var(--linie);
+  }
+
+  .schrank-half:last-child {
+    padding-left: 0;
+  }
+
+  .schrank-zeile {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .schrank-label {
+    padding-top: 0;
+  }
+
+  .schrank-row {
+    grid-template-columns: 54px 1fr;
+    gap: 10px;
+  }
+
+  .schrank-status {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .schrank-notiz {
+    grid-column: 1 / -1;
+  }
+
+  .schrank-uebersicht h3 {
+    font-size: 1.15em;
+  }
+}
+
+
+
+/* Import-Karte im Builder */
+.wahl-shell {
+  position: relative;
+  min-width: 0;
+}
+
+.import-karte .wahl-flaeche,
+.import-form {
+  cursor: default;
+}
+
+.import-form {
+  gap: 10px;
+}
+
+.import-input {
+  display: block;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--linie);
+  color: var(--text);
+  padding: 10px 12px;
+  font: inherit;
+  min-width: 0;
+}
+
+.import-input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+.import-btn {
+  width: 100%;
+  padding: 12px 14px;
+}
+
+.import-status {
+  font-size: 13px;
+  color: var(--gold-hell);
+}
+
+.import-status.fehler {
+  color: #e07a6a;
+}
+
+.import-loeschen {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--linie-hell);
+  border-radius: 999px;
+  background: rgba(11, 11, 13, 0.86);
+  color: var(--text);
+  font: 700 18px/1 ui-monospace, monospace;
+  cursor: pointer;
+}
+
+.import-loeschen:hover,
+.import-loeschen:focus-visible {
+  border-color: #e07a6a;
+  color: #e07a6a;
+}
+
+.import-placeholder-card .wahl-flaeche {
+  border: 1px dashed #c9a227;
+  background: #16161a;
+}
+.import-placeholder-card .wahl-titel {
+  color: #c9a227;
+}
+

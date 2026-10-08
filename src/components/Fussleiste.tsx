@@ -1,7 +1,7 @@
 import { META } from '../data/outfit'
 import { eur } from '../lib/format'
 
-export type Schritt = 1 | 2 | 3 | 4
+export type Schritt = 1 | 2 | 3 | 4 | 5
 
 type Props = {
   schritt: Schritt

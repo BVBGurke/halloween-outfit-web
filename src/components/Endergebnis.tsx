@@ -14,6 +14,7 @@ import {
   type Variante,
 } from '../data/outfit'
 import { eur } from '../lib/format'
+import { bildUrl } from '../lib/image'
 
 type Einreichung = {
   id: string
@@ -33,6 +34,7 @@ export function Endergebnis({ stil, meinLook }: Props) {
   const [meldung, setMeldung] = useState<'ok' | 'dupliziert' | 'fehler' | null>(null)
   const [ergebnis, setErgebnis] = useState<StimmenSumme | null>(null)
   const [einreichungen, setEinreichungen] = useState<Einreichung[]>([])
+  const [importe, setImporte] = useState<Record<string, Produkt>>({})
 
   const zeilen = useMemo<LookZeile[]>(() => {
     if (!stil) return []
@@ -74,6 +76,13 @@ export function Endergebnis({ stil, meinLook }: Props) {
   }
 
   useEffect(() => {
+    fetch('/api/imports')
+      .then((res) => (res.ok ? (res.json() as Promise<{ teile?: Produkt[] }>) : null))
+      .then((daten) => {
+        if (!Array.isArray(daten?.teile)) return
+        setImporte(Object.fromEntries(daten.teile.map((teil) => [teil.id, teil])))
+      })
+      .catch(() => {})
     void aktualisieren()
     const timer = setInterval(() => void aktualisieren(), 10000)
     return () => clearInterval(timer)
@@ -124,11 +133,12 @@ export function Endergebnis({ stil, meinLook }: Props) {
                     {zeile.teile.slice(0, 6).map((teil) => (
                       <span className="vergleich-bild" key={teil.id}>
                         <img
-                          src={`/teile/${teil.bild}`}
+                          src={bildUrl(teil.bild)}
                           width={56}
                           height={56}
                           alt=""
-                          loading="lazy"
+                          loading="eager"
+                          decoding="sync"
                         />
                       </span>
                     ))}
@@ -188,7 +198,7 @@ export function Endergebnis({ stil, meinLook }: Props) {
               const gewaehlt = stimme === wahl
               const favorit = meinLook === wahl
               const teile = einreichung.teile
-                .map((id) => PRODUKTE[id])
+                .map((id) => PRODUKTE[id] ?? importe[id])
                 .filter((teil): teil is Produkt => Boolean(teil))
               const summe = teile.reduce((s, t) => s + preisVon(t), 0)
               const name = einreichung.name?.trim() || 'Ohne Namen'
@@ -207,11 +217,12 @@ export function Endergebnis({ stil, meinLook }: Props) {
                     {teile.slice(0, 6).map((teil) => (
                       <span className="vergleich-bild" key={teil.id}>
                         <img
-                          src={`/teile/${teil.bild}`}
+                          src={bildUrl(teil.bild)}
                           width={56}
                           height={56}
                           alt=""
-                          loading="lazy"
+                          loading="eager"
+                          decoding="sync"
                         />
                       </span>
                     ))}
@@ -269,3 +280,4 @@ export function Endergebnis({ stil, meinLook }: Props) {
     </section>
   )
 }
+

@@ -1,4 +1,5 @@
 import { STILE, teileFuer, type Stil } from '../data/outfit'
+import { bildUrl } from '../lib/image'
 
 function Haken() {
   return (
@@ -35,7 +36,7 @@ export function StileReiter({ aktiverStil, onStil }: Props) {
               <Haken />
               <span className="thumb">
                 {bild && (
-                  <img src={`/teile/${bild}`} alt="" width={400} height={400} loading="lazy" />
+                  <img src={bildUrl(bild)} alt="" width={400} height={400} loading="eager" decoding="sync" />
                 )}
               </span>
               <strong className="wahl-titel">{stil.titel}</strong>

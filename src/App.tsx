@@ -8,6 +8,8 @@ import { StileReiter } from './components/Reiter'
 import { TeilKarte } from './components/TeilKarte'
 import { TeileTauschen } from './components/TeileTauschen'
 import { Vergleich } from './components/Vergleich'
+import { ImportTeil } from './components/ImportTeil'
+import { Schrank, InventarListe, INVENTAR_KATEGORIEN } from './components/Schrank'
 import {
   EINKAUF,
   MAKEUP,
@@ -29,17 +31,20 @@ import {
   type Stil,
   type Variante,
 } from './data/outfit'
+import { LEER_FORM, type InventarTeil, type NeuesTeilForm } from './data/inventar'
 import { eur } from './lib/format'
+import { bildUrl } from './lib/image'
+
 
 const SCHRITTE = [
   { nr: 1, kurz: 'Richtung' },
   { nr: 2, kurz: 'Vergleichen' },
   { nr: 3, kurz: 'Dein Look' },
   { nr: 4, kurz: 'Abstimmen' },
+  { nr: 5, kurz: 'Schrank' },
 ] as const
 
-type Modus = 'start' | 'selber' | 'stil'
-
+type Modus = 'start' | 'selber' | 'stil' | 'import'
 /** Bausteine des Builder-Modus: pro Kategorie ein Teil, nichts vorausgewählt */
 const KATEGORIEN: KategorieGruppe[] = [
   {
@@ -106,6 +111,15 @@ const KATEGORIEN: KategorieGruppe[] = [
 /** Wählbare Teile im Builder — Zahl für die Intro-Texte */
 const OPTIONEN = KATEGORIEN.reduce((n, g) => n + g.ids.length, 0)
 
+const kategorieFuerImport = (teil: Produkt): Kategorie => {
+  const text = `${teil.titel} ${teil.notiz} ${teil.produktId}`.toLowerCase()
+  if (/strumpf|netz|fishnet|overknee|sock|tight|leggings/.test(text)) return 'beinmode'
+  if (/jacke|blazer|hoodie|mantel|kimono|weste|cardigan/.test(text)) return 'jacke'
+  if (/kette|gürtel|guertel|armband|handschuh|mütze|muetze|schal|tuch|cap|ohr|stirnband|accessoire|bag|tasche/.test(text)) return 'accessoire'
+  if (/rock|skort|hose|pants|jeans|short|kleid|dress|skirt/.test(text)) return 'unten'
+  return 'top'
+}
+
 const LEER_BAU: Record<Kategorie, string | null> = {
   top: null,
   unten: null,
@@ -113,6 +127,8 @@ const LEER_BAU: Record<Kategorie, string | null> = {
   jacke: null,
   accessoire: null,
 }
+
+
 
 const datumLang = (iso: string) => {
   const datum = new Date(iso)
@@ -142,12 +158,28 @@ export default function App() {
   const [makeup, setMakeup] = useState(MAKEUP.map((m) => m.ok))
   const [live, setLive] = useState<{ stand: string | null } | null>(null)
 
+  const [importierteTeile, setImportierteTeile] = useState<Produkt[]>([])
+  const [inventar, setInventar] = useState<InventarTeil[]>([])
+  const [inventarForm, setInventarForm] = useState<NeuesTeilForm>(LEER_FORM)
+  const [inventarFehler, setInventarFehler] = useState<string | null>(null)
+  const [inventarSubmit, setInventarSubmit] = useState<'idle' | 'senden'>('idle')
+  const [inventarStatus, setInventarStatus] = useState<'ok' | 'loeschen' | null>(null)
+  const [inventarMsg, setInventarMsg] = useState<string | null>(null)
+
   const stilDef = stil ? STIL_INDEX[stil] : null
 
   // Live-Preise einmalig beim Start holen — setLivePreise mutiert den Cache in
   // outfit.ts, deshalb setzt setLive zusätzlich einen React-Tick.
   useEffect(() => {
     let lebt = true
+    fetch('/api/imports')
+      .then((res) => (res.ok ? (res.json() as Promise<{ teile?: Produkt[] }>) : null))
+      .then((daten) => {
+        if (!lebt || !Array.isArray(daten?.teile)) return
+        setImportierteTeile(daten.teile)
+      })
+      .catch(() => {})
+
     const ids = [...new Set(Object.values(PRODUKTE).map((p) => p.produktId))]
     fetch(`/api/preise?ids=${encodeURIComponent(ids.join(','))}`)
       .then((res) =>
@@ -185,30 +217,112 @@ export default function App() {
     return liste
   }, [basisTeile, tausch])
 
+  const importierteProdukte = useMemo(
+    () => Object.fromEntries(importierteTeile.map((teil) => [teil.id, teil])),
+    [importierteTeile],
+  )
+  const alleProdukte = useMemo(
+    () => ({ ...PRODUKTE, ...importierteProdukte }),
+    [importierteProdukte],
+  )
+  const builderGruppen = useMemo(
+    () =>
+      KATEGORIEN.map((gruppe) => ({
+        ...gruppe,
+        ids: [
+          ...gruppe.ids,
+          ...importierteTeile
+            .filter((teil) => kategorieFuerImport(teil) === gruppe.key)
+            .map((teil) => teil.id),
+        ],
+      })),
+    [importierteTeile],
+  )
+
   const bauTeile = useMemo(() => {
     const liste: Produkt[] = []
-    for (const gruppe of KATEGORIEN) {
+    for (const gruppe of builderGruppen) {
       const id = bau[gruppe.key]
-      const teil = id ? PRODUKTE[id] : undefined
+      const teil = id ? alleProdukte[id] : undefined
       if (teil) liste.push(teil)
     }
     return liste
-  }, [bau])
+  }, [alleProdukte, bau, builderGruppen])
 
-  const teile = modus === 'selber' ? bauTeile : lookTeile
+  const teile = modus === 'selber' ? bauTeile : modus === 'import' ? importierteTeile : lookTeile
   const summe = teile.reduce((s, t) => s + preisVon(t), 0)
   const gewaehlteId = stil && variante ? lookId(stil, variante) : null
   const lookLabel = stil && variante ? varianteLabel(stil, variante) : null
   const planLabel =
     modus === 'selber'
       ? 'Selber gewählt'
-      : `${stilDef?.titel ?? 'Kein Stil'} · ${lookLabel ?? 'kein Look'}${
+      : modus === 'import'
+        ? 'Importierte Teile'
+        : `${stilDef?.titel ?? 'Kein Stil'} · ${lookLabel ?? 'kein Look'}${
           Object.keys(tausch).length ? ' (getauscht)' : ''
         }`
 
   const springe = (ziel: Schritt) => {
     setSchritt(ziel)
     window.scrollTo({ top: 0 })
+  }
+
+  const inventarNeu = (feld: keyof NeuesTeilForm, wert: string) => {
+    setInventarForm((alt) => ({
+      ...alt,
+      [feld]: wert,
+      farbe: feld === 'farbe' ? wert : alt.farbe,
+      unterton: feld === 'unterton' ? wert : alt.unterton,
+      stoff: feld === 'stoff' ? wert : alt.stoff,
+      formalitaet: feld === 'formalitaet' ? wert : alt.formalitaet,
+      zustand: feld === 'zustand' ? wert : alt.zustand,
+    }))
+    setInventarFehler(null)
+  }
+
+  const inventarAbschicken = async () => {
+    setInventarSubmit('senden')
+    setInventarFehler(null)
+    try {
+      const res = await fetch('/api/inventar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inventarForm),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(String(body.fehler ?? `HTTP ${res.status}`))
+      }
+      const daten = (await res.json()) as { id: string; teil: InventarTeil }
+      setInventar((alt) => [...alt, daten.teil])
+      setInventarStatus('ok')
+      setInventarMsg(`${daten.teil.titel} ist jetzt im Schrank.`)
+      setInventarForm(LEER_FORM)
+    } catch (e) {
+      setInventarFehler(e instanceof Error ? e.message : 'Konnte nicht gespart werden.')
+    } finally {
+      setInventarSubmit('idle')
+    }
+  }
+
+  const inventarLoeschen = async (id: string) => {
+    setInventarStatus('loeschen')
+    try {
+      const res = await fetch('/api/inventar', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(String(body.fehler ?? `HTTP ${res.status}`))
+      }
+      setInventar((alt) => alt.filter((t) => t.id !== id))
+    } catch {
+      /* Liste lokal korrigieren, Meldung unten bleibt */
+    } finally {
+      setInventarStatus(null)
+    }
   }
 
   const waehleStil = (s: Stil) => {
@@ -231,6 +345,24 @@ export default function App() {
     setBau((alt) => ({ ...alt, [kategorie]: produktKey }))
   }
 
+  const importTeil = (teil: Produkt) => {
+    setImportierteTeile((alt) => [teil, ...alt.filter((t) => t.id !== teil.id)])
+  }
+
+  const loescheImportTeil = async (id: string) => {
+    try {
+      await fetch(`/api/import/${encodeURIComponent(id)}`, { method: 'DELETE' })
+    } catch {
+      /* lokal trotzdem entfernen */
+    }
+    setImportierteTeile((alt) => alt.filter((teil) => teil.id !== id))
+    setBau((alt) =>
+      Object.fromEntries(
+        Object.entries(alt).map(([kategorie, wert]) => [kategorie, wert === id ? null : wert]),
+      ) as Record<Kategorie, string | null>,
+    )
+  }
+
   const waehleModus = (m: Modus) => {
     setModus(m)
     setStil(null)
@@ -247,6 +379,7 @@ export default function App() {
     if (schritt === 1) {
       if (modus === 'stil' && stil) springe(2)
       else if (modus === 'selber' && bauTeile.length) springe(3)
+      else if (modus === 'import' && importierteTeile.length) springe(3)
     } else if (schritt === 2 && stil && variante) springe(3)
     else if (schritt === 3 && teile.length) springe(4)
     else if (schritt === 4) {
@@ -267,8 +400,9 @@ export default function App() {
   const darfSpringen = (ziel: Schritt) =>
     ziel === 1 ||
     (ziel === 2 && modus === 'stil' && Boolean(stil)) ||
+    (ziel === 5 && Boolean(importierteTeile.length)) ||
     ((ziel === 3 || ziel === 4) &&
-      (modus === 'stil' ? Boolean(stil && variante) : bauTeile.length > 0))
+      (modus === 'stil' ? Boolean(stil && variante) : modus === 'import' ? importierteTeile.length > 0 : bauTeile.length > 0))
 
   const toggle = (setter: Dispatch<SetStateAction<boolean[]>>, index: number) => () =>
     setter((alt) => alt.map((ok, i) => (i === index ? !ok : ok)))
@@ -276,7 +410,19 @@ export default function App() {
   const leer = teile.length === 0
   const kannLos = modus === 'selber' ? bauTeile.length > 0 : Boolean(stil)
   const weiterGesperrt =
-    modus === 'start' ? true : schritt === 1 ? !kannLos : schritt === 2 ? !variante : schritt === 3 ? leer : false
+    modus === 'start'
+      ? true
+      : schritt === 1
+        ? modus === 'import'
+          ? importierteTeile.length === 0
+            ? 'Noch nichts importiert'
+            : false
+          : !kannLos
+        : schritt === 2
+          ? !variante
+          : schritt === 3
+            ? leer
+            : false
   const weiterText =
     modus === 'start'
       ? 'Wähle einen Modus'
@@ -285,9 +431,13 @@ export default function App() {
           ? leer
             ? 'Wähle mindestens ein Teil'
             : 'Weiter zu Deinem Look'
-          : stil
-            ? 'Weiter zu Vergleichen'
-            : 'Wähle zuerst einen Stil'
+          : modus === 'import'
+            ? importierteTeile.length === 0
+              ? 'Importiere zuerst ein Teil'
+              : 'Weiter zu Deinem Look'
+            : stil
+              ? 'Weiter zu Vergleichen'
+              : 'Wähle zuerst einen Stil'
         : schritt === 2
           ? variante
             ? 'Weiter zu Deinem Look'
@@ -343,12 +493,12 @@ export default function App() {
             role="progressbar"
             aria-label="Auswahlschritt"
             aria-valuemin={1}
-            aria-valuemax={4}
+            aria-valuemax={SCHRITTE.length}
             aria-valuenow={schritt}
           >
-            <div className="progress-fill" style={{ width: `${schritt * 25}%` }} />
+            <div className="progress-fill" style={{ width: `${Math.round((schritt / SCHRITTE.length) * 100)}%` }} />
           </div>
-          <span className="fortschritt-label">Schritt {schritt} von 4</span>
+          <span className="fortschritt-label">Schritt {schritt} von {SCHRITTE.length}</span>
         </div>
       </div>
 
@@ -424,6 +574,22 @@ export default function App() {
                   </span>
                 </span>
               </label>
+              <label className="wahl">
+                <input
+                  className="sr-only"
+                  type="radio"
+                  name="modus"
+                  value="import"
+                  onChange={() => waehleModus('import')}
+                />
+                <span className="wahl-flaeche">
+                  <Haken />
+                  <strong className="wahl-titel">Teile importieren</strong>
+                  <span className="wahl-meta">
+                    Füge einen Link von NewYorker ein, um Teile direkt aus dem Shop in deine Auswahl zu übernehmen.
+                  </span>
+                </span>
+              </label>
             </div>
           </>
         )}
@@ -431,10 +597,10 @@ export default function App() {
         {schritt === 1 && modus !== 'start' && (
           <>
             <h2>
-              <span>Schritt 1</span> — {modus === 'stil' ? 'Welche Richtung' : 'Deine Teile'}
+              <span>Schritt 1</span> — {modus === 'stil' ? 'Welche Richtung' : modus === 'import' ? 'Teile Import' : 'Deine Teile'}
             </h2>
             <p className="absatz">
-              Modus <strong>{modus === 'stil' ? 'Vorgefertigte anpassen' : 'Selber wählen'}</strong>{' '}
+              Modus <strong>{modus === 'stil' ? 'Vorgefertigte anpassen' : modus === 'import' ? 'Links Importieren' : 'Selber wählen'}</strong>{' '}
               ·{' '}
               <button type="button" className="link" onClick={() => waehleModus('start')}>
                 Modus wechseln
@@ -442,8 +608,19 @@ export default function App() {
             </p>
             {modus === 'stil' ? (
               <StileReiter aktiverStil={stil} onStil={waehleStil} />
+            ) : modus === 'import' ? (
+              <ImportTeil onImport={importTeil} />
             ) : (
-              <Builder gruppen={KATEGORIEN} wahl={bau} onChange={waehleBau} />
+              <>
+                <ImportTeil onImport={importTeil} />
+                <Builder
+                  gruppen={builderGruppen}
+                  wahl={bau}
+                  produkte={alleProdukte}
+                  onDelete={loescheImportTeil}
+                  onChange={waehleBau}
+                />
+              </>
             )}
           </>
         )}
@@ -536,11 +713,12 @@ export default function App() {
               <div className="schuhe-kasten">
                 <img
                   className="schuhe-bild"
-                  src={`/teile/${SCHUHE.bild}`}
+                  src={bildUrl(SCHUHE.bild)}
                   alt={`${SCHUHE.marke} ${SCHUHE.modell}, Größe ${SCHUHE.groesse} — schwarze Damen-Knieboots mit Blockabsatz und Langschaft`}
-                  loading="lazy"
                   width={1000}
                   height={1000}
+                  loading="eager"
+                  decoding="sync"
                 />
                 <p>
                   Stehen nicht in der Rechnung, weil du sie schon hast. Sie sind der Anker: der ganze
@@ -689,6 +867,66 @@ export default function App() {
           </>
         )}
 
+        {schritt === 5 && (
+          <>
+            <h2>
+              <span>Schritt 5</span> — Schrank
+            </h2>
+            <p className="absatz">
+              Dein Schrank enthält {inventar.length === 0 ? 'noch nichts' : `${inventar.length} erfasste Teile`}.
+              Neue Teile direkt hier erfassen — danach tauchen sie im Selber-Wählen auf.
+            </p>
+
+            <Schrank
+              inventar={inventar}
+              form={inventarForm}
+              fehler={inventarFehler}
+              submit={inventarSubmit}
+              onField={inventarNeu}
+              onSubmit={inventarAbschicken}
+              onLoeschen={inventarLoeschen}
+              status={inventarStatus}
+              msg={inventarMsg}
+            />
+
+            <InventarListe
+              teile={inventar}
+              onLoeschen={inventarLoeschen}
+              status={inventarStatus}
+              msg={inventarMsg}
+            />
+
+            <div className="schrank-uebersicht">
+              <h3>übersicht nach Kategorie</h3>
+              {INVENTAR_KATEGORIEN.map((kat) => {
+                const teile = inventar.filter((t) => t.kategorie === kat.key)
+                if (!teile.length) return null
+                return (
+                  <div className="schrank-kategorie" key={kat.key}>
+                    <h2>{kat.titel}</h2>
+                    <ul className="schrank-liste">
+                      {teile.map((t) => (
+                        <li key={t.id} className="schrank-row">
+                          <span className="schrank-id">{t.id}</span>
+                          <span className="schrank-titel">{t.titel}</span>
+                          <span className="schrank-meta">
+                            {t.farbe} · {t.unterton} · {t.stoff} · {t.formalitaet}
+                          </span>
+                          <span className="schrank-notiz">{t.passformNotiz}</span>
+                          <span className="schrank-status">{t.zustand}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+              {inventar.length === 0 && (
+                <p className="hinweis">Noch keine Teile erfasst — oben den ersten Teil ergänzen.</p>
+              )}
+            </div>
+          </>
+        )}
+
         {schritt === 4 && (
           <>
             <h2>
@@ -705,11 +943,12 @@ export default function App() {
                 {teile.map((teil) => (
                   <span className="vorschau-bild" key={teil.id}>
                     <img
-                      src={`/teile/${teil.bild}`}
+                      src={bildUrl(teil.bild)}
                       width={120}
                       height={120}
                       alt=""
-                      loading="lazy"
+                      loading="eager"
+                      decoding="sync"
                     />
                   </span>
                 ))}
@@ -730,10 +969,10 @@ export default function App() {
 
       <Fussleiste
         schritt={schritt}
-        stilName={modus === 'selber' ? 'Selber wählen' : stilDef?.titel ?? null}
+        stilName={modus === 'selber' ? 'Selber wählen' : modus === 'import' ? 'Import' : stilDef?.titel ?? null}
         lookLabel={modus === 'selber' ? (bauTeile.length ? `${bauTeile.length} Teile` : null) : lookLabel}
         summe={teile.length ? summe : null}
-        weiterGesperrt={weiterGesperrt}
+        weiterGesperrt={Boolean(weiterGesperrt)}
         weiterText={weiterText}
         zeigeVergleichen={modus === 'stil'}
         onWeiter={weiter}
@@ -743,3 +982,4 @@ export default function App() {
     </>
   )
 }
+

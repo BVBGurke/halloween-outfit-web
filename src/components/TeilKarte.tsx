@@ -1,5 +1,6 @@
 import { ladenFuer, livePreisFuer, preisVon, produktUrl, type Produkt } from '../data/outfit'
 import { eur } from '../lib/format'
+import { bildUrl } from '../lib/image'
 
 const ROLLE: Record<Produkt['lage'], string> = {
   basis: 'Basis',
@@ -27,11 +28,12 @@ export function TeilKarte({ teil }: { teil: Produkt }) {
     <article className="karte" data-lage={teil.lage}>
       <div className="bilder">
         <img
-          src={`/teile/${teil.bild}`}
+          src={bildUrl(teil.bild)}
           alt={`${teil.titel} von ${teil.marke}, Farbe Schwarz`}
           width={800}
           height={800}
-          loading="lazy"
+          loading="eager"
+          decoding="sync"
         />
       </div>
       <div className="kopf">
@@ -66,3 +68,4 @@ export function TeilKarte({ teil }: { teil: Produkt }) {
     </article>
   )
 }
+

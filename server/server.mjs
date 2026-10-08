@@ -3,9 +3,11 @@ import { DatabaseSync } from 'node:sqlite'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { createHash, randomBytes } from 'node:crypto'
+import fs from 'node:fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DB_PATH = path.join(__dirname, 'votes.db')
+const IMPORT_CONFIG_PATH = path.join(__dirname, 'imports.config.json')
 const PORT = process.env.PORT || 5176
 
 const db = new DatabaseSync(DB_PATH)
@@ -25,6 +27,42 @@ db.exec(`
     erstellt TEXT NOT NULL
   )
 `)
+db.exec(`
+  CREATE TABLE IF NOT EXISTS import_teile (
+    id TEXT PRIMARY KEY,
+    quelle_url TEXT NOT NULL UNIQUE,
+    titel TEXT NOT NULL,
+    marke TEXT NOT NULL,
+    preis REAL NOT NULL,
+    bild TEXT NOT NULL,
+    lage TEXT NOT NULL,
+    produkt_id TEXT NOT NULL,
+    notiz TEXT NOT NULL,
+    raw_json TEXT,
+    erstellt TEXT NOT NULL,
+    aktualisiert TEXT NOT NULL
+  )
+`)
+
+function importConfigLesen() {
+  try {
+    const roh = fs.readFileSync(IMPORT_CONFIG_PATH, 'utf8')
+    const cfg = JSON.parse(roh)
+    return {
+      deletedIds: Array.isArray(cfg.deletedIds) ? cfg.deletedIds.map(String) : [],
+      deletedUrls: Array.isArray(cfg.deletedUrls) ? cfg.deletedUrls.map(String) : [],
+    }
+  } catch {
+    const cfg = { deletedIds: [], deletedUrls: [] }
+    fs.writeFileSync(IMPORT_CONFIG_PATH, `${JSON.stringify(cfg, null, 2)}\n`)
+    return cfg
+  }
+}
+
+function istImportGeloescht(zeile) {
+  const cfg = importConfigLesen()
+  return cfg.deletedIds.includes(String(zeile.id)) || cfg.deletedUrls.includes(String(zeile.quelle_url))
+}
 
 const app = express()
 app.use(express.json())
@@ -372,6 +410,124 @@ app.get('/api/preise', async (req, res) => {
   )
 
   res.json({ ok: true, stand, daten })
+})
+
+function importZeileZuTeil(r) {
+  return {
+    id: r.id,
+    titel: r.titel,
+    marke: r.marke,
+    preis: Number(r.preis) || 0,
+    bild: r.bild,
+    lage: r.lage || 'anker',
+    produktId: r.produkt_id,
+    notiz: r.notiz || 'Importiert per Link',
+    link: r.quelle_url,
+  }
+}
+
+function sichereImportId(url, produktId) {
+  const h = createHash('sha1').update(`${url}|${produktId}`).digest('hex').slice(0, 10)
+  return `imp_${h}`
+}
+
+function textAusHtml(html, re) {
+  const m = html.match(re)
+  return m ? m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&').trim() : ''
+}
+
+async function generischScrapen(url) {
+  const r = await fetch(url, {
+    headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' },
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+  })
+  if (!r.ok) throw new Error(`Shop-Seite HTTP ${r.status}`)
+  const html = await r.text()
+  const jsonLd = [...html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)]
+    .map((m) => {
+      try { return JSON.parse(m[1].trim()) } catch { return null }
+    })
+    .flatMap((x) => Array.isArray(x) ? x : [x])
+    .find((x) => x && (x['@type'] === 'Product' || (Array.isArray(x['@type']) && x['@type'].includes('Product'))))
+
+  const titel = jsonLd?.name || textAusHtml(html, /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i) || 'Importiertes Teil'
+  const bild = Array.isArray(jsonLd?.image) ? jsonLd.image[0] : jsonLd?.image || textAusHtml(html, /<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/i)
+  const preis = zuZahl(jsonLd?.offers?.price) || zuZahl(textAusHtml(html, /<meta[^>]+property=["']product:price:amount["'][^>]+content=["']([^"']+)/i)) || 0
+  const marke = typeof jsonLd?.brand === 'string' ? jsonLd.brand : jsonLd?.brand?.name || new URL(url).hostname.replace(/^www\./, '')
+  return { titel, marke, preis, bild: bild || '', produktId: jsonLd?.sku || url, raw: jsonLd || null }
+}
+
+async function newYorkerImport(urlParam) {
+  const id = (urlParam.match(NY_ID_RE) || urlParam.match(/\d{2}\.\d{2}\.\d{3,4}\.\d{4}/))?.[0]
+  if (!id) return null
+
+  const apiUrl = `https://api.newyorker.de/csp/products/public/product/${id}?country=de`
+  const r = await fetch(apiUrl, {
+    headers: { 'User-Agent': UA, Accept: 'application/json' },
+    signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+  })
+  if (!r.ok) throw new Error(`NEW YORKER HTTP ${r.status}`)
+  const j = await r.json()
+  const varianten = Array.isArray(j?.variants) ? j.variants : []
+  const v = varianten.find((x) => x?.product_id === id) || varianten.find((x) => x?.is_primary_variant) || varianten.find((x) => zuZahl(x?.current_price) != null) || varianten[0]
+  const imgObj = v?.images?.find((i) => i.type === 'CUTOUT') || v?.images?.find((i) => i.type === 'OUTFIT_IMAGE') || v?.images?.[0]
+
+  return {
+    titel: j.descriptions?.find((d) => d.language === 'DE')?.description || j.maintenance_group || 'NEW YORKER Teil',
+    marke: j.brand || 'NEW YORKER',
+    preis: zuZahl(v?.current_price) || 0,
+    bild: imgObj ? `https://api.newyorker.de/csp/images/image/public/${imgObj.key}?res=high` : '',
+    produktId: id,
+    raw: { product: j, variant: v },
+  }
+}
+
+function speichereImport(url, daten) {
+  const jetzt = new Date().toISOString()
+  const id = sichereImportId(url, daten.produktId)
+  db.prepare(`
+    INSERT INTO import_teile (id, quelle_url, titel, marke, preis, bild, lage, produkt_id, notiz, raw_json, erstellt, aktualisiert)
+    VALUES (?, ?, ?, ?, ?, ?, 'anker', ?, 'Importiert per Link', ?, ?, ?)
+    ON CONFLICT(quelle_url) DO UPDATE SET
+      titel = excluded.titel,
+      marke = excluded.marke,
+      preis = excluded.preis,
+      bild = excluded.bild,
+      produkt_id = excluded.produkt_id,
+      raw_json = excluded.raw_json,
+      aktualisiert = excluded.aktualisiert
+  `).run(id, url, daten.titel, daten.marke, daten.preis, daten.bild, daten.produktId, JSON.stringify(daten.raw ?? null), jetzt, jetzt)
+
+  const zeile = db.prepare('SELECT * FROM import_teile WHERE quelle_url = ?').get(url)
+  return importZeileZuTeil(zeile)
+}
+
+app.get('/api/imports', (_req, res) => {
+  const zeilen = db.prepare('SELECT * FROM import_teile ORDER BY aktualisiert DESC').all()
+  const teile = zeilen.filter((zeile) => !istImportGeloescht(zeile)).map(importZeileZuTeil)
+  res.json({ ok: true, teile })
+})
+
+app.post('/api/import', async (req, res) => {
+  const url = typeof req.body?.url === 'string' ? req.body.url.trim() : ''
+  if (!/^https?:\/\//i.test(url)) return res.status(400).json({ ok: false, fehler: 'Gültigen Produkt-Link einfügen.' })
+
+  try {
+    const daten = (await newYorkerImport(url)) || (await generischScrapen(url))
+    const teil = speichereImport(url, daten)
+    res.status(201).json({ ok: true, teil })
+  } catch (err) {
+    res.status(502).json({ ok: false, fehler: err?.message || 'Import fehlgeschlagen' })
+  }
+})
+
+app.delete('/api/import/:id', (req, res) => {
+  const id = typeof req.params.id === 'string' ? req.params.id : ''
+  if (!/^imp_[a-f0-9]{10}$/.test(id)) return res.status(400).json({ ok: false, fehler: 'Ungültige Import-ID' })
+
+  const info = db.prepare('DELETE FROM import_teile WHERE id = ?').run(id)
+  db.prepare("DELETE FROM stimmen WHERE wahl = ?").run(`outfit:${id}`)
+  res.json({ ok: true, geloescht: Number(info.changes) })
 })
 
 app.listen(PORT, () => {
